@@ -17,5 +17,5 @@ struct chip8 {
 	unsigned char sound_timer;
 	struct stack_t stack;
 	unsigned short sp;		//stack pointer
-	unsigned char key[16];	//keypad
+	unsigned char keys[16];	//keypad
 };
