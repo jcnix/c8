@@ -48,14 +48,14 @@ void initialize(struct chip8 *c)
 	  0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 	};
 
-
 	//clear display
 	//clear stack
 	//clear registers V0-VF
 	//clear memory
 
 	//Load fontset
-	for(int i =0; i < 80; ++i)
+	int i = 0;
+	for(i =0; i < 80; ++i)
 	{
 		c->memory[i] = fontset[i];
 	}
