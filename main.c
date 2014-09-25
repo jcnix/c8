@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <SDL2/sdl.h>
 #include "chip8.h"
 
 int i = 0;
@@ -53,6 +54,7 @@ void initialize(struct chip8 *c)
 	c->opcode = 0;
 	c->I = 0;
 	c->sp = 0;
+	c->drawFlag = 0;
 
 	unsigned char fontset[80] = { 
 	  0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -116,7 +118,7 @@ void _DxyN(struct chip8 *c, int vx, int vy)
 				//ignore pixels outside screen
 				continue;
 			}
-			int mask = 1 << 8 - pixel_offset;
+			int mask = 1 << (8 - pixel_offset);
 			int curr_pixel = (curr_row & mask) >> (8 - pixel_offset);
 			c->gfx[loc] ^= curr_pixel;
 			if(c->gfx[loc] == 0)
@@ -166,11 +168,11 @@ void emulate_cycle(struct chip8 *c)
 			c->pc = c->opcode & 0x0FFF;
 			break;
 		case 0x3000: //3NNN: skip instruction if V[x]= NN
-			if(c->V[vx] == c->opcode & 0x00FF)
+			if(c->V[vx] == (c->opcode & 0x00FF))
 				c->pc += 2;
 			break;
 		case 0x4000: //4xNN: skip instruction if V[x] != NN
-			if(c->V[vx] != c->opcode & 0x00FF)
+			if(c->V[vx] != (c->opcode & 0x00FF))
 				c->pc += 2;
 			break;
 		case 0x5000: //5xy0: skip instruction if V[x] == V[y]
@@ -339,18 +341,85 @@ int main(int argc, char** argv)
 	load_game(&cpu, argv[1]);
 
 	//setup graphics
-	//setup input
+	SDL_Window *window = NULL;
+	SDL_Surface *screen = NULL;
+	if(SDL_Init(SDL_INIT_VIDEO) < 0)
+	{
+		printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
+	}
+	else
+	{
+		window = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+		if(!window)
+		{
+			printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
+		}
+		else
+		{
+			//Get window surface
+            screen = SDL_GetWindowSurface(window);
 
-	for(;;)
+            //Fill the surface white
+            SDL_FillRect( screen, NULL, SDL_MapRGB(screen->format, 0xFF, 0xFF, 0xFF ) );
+            
+            //Update the surface
+            SDL_UpdateWindowSurface(window);
+		}
+	}
+
+	SDL_Surface *s;
+	s = SDL_CreateRGBSurface(0, 640, 320, 32, 0,0,0,0);
+	SDL_FillRect(s, NULL, SDL_MapRGB(s->format, 255, 0, 0));
+	SDL_Surface *pixel = NULL;
+	pixel = SDL_LoadBMP("pixel.bmp");
+	if(!pixel)
+	{
+    	printf( "Unable to load image! SDL Error: %s\n", SDL_GetError() );
+	}
+	SDL_BlitSurface(s, NULL, screen, NULL);
+	SDL_BlitSurface(pixel, NULL, screen, NULL);
+	SDL_UpdateWindowSurface(window);
+
+	//setup input
+	
+	int quit = 0;
+	while(!quit)
 	{
 		emulate_cycle(&cpu);
 		if(cpu.drawFlag)
 		{
 			//draw graphics
+		    SDL_BlitSurface(s, NULL, screen, NULL);
+		    for(int i = 0; i < DISP_T; i++)
+		    {
+		    	if(cpu.gfx[i])
+		    	{
+		    		int x = (i % 64) * 10;
+		    		int y = (i / 64) *10;
+		    		SDL_Rect r;
+		    		r.x = x;
+		    		r.y = y;
+		    		r.w = 10;
+		    		r.h = 10;
+		    		SDL_BlitSurface(pixel, NULL, screen, NULL);
+		    	}
+		    }
+		    SDL_UpdateWindowSurface(window);
+		    cpu.drawFlag = 0;
 		}
 
 		//set keys
+		SDL_Event e;
+		SDL_PollEvent(&e);
+		if(e.type == SDL_QUIT)
+			quit = 1;
 	}
+
+	SDL_FreeSurface(pixel);
+	pixel = NULL;
+
+	SDL_DestroyWindow( window );
+    SDL_Quit();
 
 	return 0;
 }

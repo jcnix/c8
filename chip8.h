@@ -1,4 +1,6 @@
 #define DISP_T 64*32 //Display buffer size
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 320
 
 struct stack_t {
 	unsigned short i;
