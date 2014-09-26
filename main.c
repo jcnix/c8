@@ -143,17 +143,17 @@ void emulate_cycle(struct chip8 *c)
 	switch(c->opcode & 0xF000)
 	{
 		case 0x0000: 
-			switch(c->opcode & 0x000F)
+			switch(c->opcode & 0x00FF)
 			{
-				case 0x0000: //0x00E0: clears the screen
+				case 0x00E0: //0x00E0: clears the screen
 					memset(c->gfx, 0, DISP_T);
 					c->drawFlag = 1;
 					break;
-				case 0x000E: //0x00EE: returns from subroutine
+				case 0x00EE: //0x00EE: returns from subroutine
 					c->pc = stack_pop(&c->stack);
 					break;
 				default:
-					printf("Unknown opcode [0x0000]: 0x%X\n", c->opcode);
+					printf("Unknown opcode [0x00En]: 0x%X\n", c->opcode);
 					exit(1);
 			}
 			break;
@@ -199,18 +199,12 @@ void emulate_cycle(struct chip8 *c)
 					c->V[vx] ^= c->V[vy];
 					break;
 				case 0x0004: //8xy4: V[x] += V[y]
-					if(c->V[vx] + c->V[vy] > 0xFF)
-						c->V[0xF] = 1;
-					else
-						c->V[0xF] = 0;
+					c->V[0xF] = (c->V[vx] + c->V[vy]) > 0xFF;
 					c->V[vx] += c->V[vy];
 					c->V[vx] &= 0xFF;
 					break;
 				case 0x0005: //8xy5: V[x] -= V[y]
-					if(c->V[vx] > c->V[vy])
-						c->V[0xF] = 1;
-					else
-						c->V[0xF] = 0;
+					c->V[0xF] = c->V[vx] > c->V[vy];
 					c->V[vx] -= c->V[vy];
 					c->V[vx] &= 0xFF;
 					break;
@@ -219,10 +213,7 @@ void emulate_cycle(struct chip8 *c)
 					c->V[vx] = c->V[vx] >> 1;
 					break;
 				case 0x0007: //8xy7: V[x] = V[y] - V[x]
-					if(c->V[vy] > c->V[vx])
-						c->V[0xF] = 1;
-					else
-						c->V[0xF] = 0;
+					c->V[0xF] = c->V[vy] > c->V[vx];
 					c->V[vx] = c->V[vy] - c->V[vx];
 					c->V[vx] &= 0xFF;
 					break;
@@ -232,7 +223,7 @@ void emulate_cycle(struct chip8 *c)
 					c->V[vx] &= 0xFF;
 					break;
 				default:
-					printf("Unknown opcode: [0x8000]: 0x%X\n", c->opcode);
+					printf("Unknown opcode: [0x8nnn]: 0x%X\n", c->opcode);
 					exit(1);
 			}
 			break;
@@ -265,7 +256,7 @@ void emulate_cycle(struct chip8 *c)
 						c->pc += 2;
 					break;
 				default:
-					printf("Unknown opcode [0xE000]: 0x%x\n", c->opcode);
+					printf("Unknown opcode [0xEnnn]: 0x%x\n", c->opcode);
 					exit(1);
 			}
 			break;
@@ -311,7 +302,7 @@ void emulate_cycle(struct chip8 *c)
 					c->I += vx + 1;
 					break;
 				default:
-					printf("Unknown opcode [0xF000]: 0x%x\n", c->opcode);
+					printf("Unknown opcode [0xFnnn]: 0x%x\n", c->opcode);
 					exit(1);
 			}
 			break;
