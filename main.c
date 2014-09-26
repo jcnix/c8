@@ -278,16 +278,16 @@ void emulate_cycle(struct chip8 *c)
 				case 0x000A: //Fx0A: pause and wait for input
 					_Fx0A(c, vx);
 					break;
-				case 0x0015:
+				case 0x0015: //Fx15: Set delay timer to V[x]
 					c->delay_timer = c->V[vx];
 					break;
-				case 0x0018:
+				case 0x0018: //Fx18: Set sound timer to V[x]
 					c->sound_timer = c->V[vx];
 					break;
-				case 0x001E:
+				case 0x001E: //Fx1E: I += V[x]
 					c->I += c->V[vx];
 					break;
-				case 0x0029:
+				case 0x0029: //Fx29: I = location of sprite for digit Vx
 					c->I = (5*(c->V[vx])) & 0xfff;
 					break;
 				case 0x0033: //Fx33: Store BCD representation of Vx in memory I, I+1, and I+2
@@ -295,14 +295,14 @@ void emulate_cycle(struct chip8 *c)
 					c->memory[c->I+1] = (c->V[vx] % 100) / 10;
 					c->memory[c->I+2] = c->V[vx] % 10;
 					break;
-				case 0x0055:
+				case 0x0055: //Fx55: Store registers V[0] to V[x] in memory starting at I
 					for(int i = 0; i > vx; i++)
 					{
 						c->memory[c->I+i] = c->V[i];
 					}
 					c->I = c->V[vx] + 1;
 					break;
-				case 0x0065:
+				case 0x0065: //Fx65: Read memory from I to I+x and store in V[0] to V[x]
 					for(int i = 0; i > vx; i++)
 					{
 						c->V[i] = c->memory[c->I + i];
