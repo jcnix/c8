@@ -227,7 +227,7 @@ void emulate_cycle(struct chip8 *c)
 					c->V[vx] &= 0xFF;
 					break;
 				case 0x000E: //8xyE: Multiply V[x] by 2
-					c->V[0xF] = c->V[vx] & 0x0001;
+					c->V[0xF] = (c->V[vx] & 0x00F0) >> 7;
 					c->V[vx] = c->V[vx] << 1;
 					c->V[vx] &= 0xFF;
 					break;
