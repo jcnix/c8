@@ -13,7 +13,7 @@ void stack_push(struct stack_t **head, int i)
 	curr->i = i;
 	curr->next = *head;
 	*head = curr;
-	printf("push %d\n", i);
+	printf("push %x\n", i);
 }
 
 int stack_pop(struct stack_t **head)
@@ -22,6 +22,7 @@ int stack_pop(struct stack_t **head)
 		return 0;
 		
 	int i = (*head)->i;
+	printf("pop %x\n", i);
 	struct stack_t *temp = (*head)->next;
 	free(*head);
 	*head = temp;
@@ -92,8 +93,17 @@ void initialize(struct chip8 *c)
 
 void _Fx0A(struct chip8 *c, int vx)
 {
-	char ch = getchar();
-	c->V[vx] = ch;
+	char ch;
+	for(int i = 0; i < 16; i++)
+	{
+		if(c->keys[i] == 1)
+			ch = 1;
+	}
+
+	if(ch > 0)
+		c->V[vx] = ch;
+	else
+		c->pc+=2;
 }
 
 void _DxyN(struct chip8 *c, int vx, int vy)
@@ -133,8 +143,10 @@ void emulate_cycle(struct chip8 *c)
 {
 	//fetch 
 	c->opcode = c->memory[c->pc] << 8 | c->memory[c->pc+1];
-	printf("%d: opcode: 0x%04x\n", ++opcount, c->opcode);
-	
+	//printf("%d: opcode: 0x%04x\n", ++opcount, c->opcode);
+	//if(opcount >= 100)
+	//	exit(1);
+
 	c->pc += 2;
 	int vx = c->opcode & 0x0F00 >> 8;
 	int vy = c->opcode & 0x00F0 >> 4;
