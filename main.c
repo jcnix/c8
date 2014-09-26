@@ -151,7 +151,6 @@ void emulate_cycle(struct chip8 *c)
 					break;
 				case 0x000E: //0x00EE: returns from subroutine
 					c->pc = stack_pop(&c->stack);
-					c->sp -= 1;
 					break;
 				default:
 					printf("Unknown opcode [0x0000]: 0x%X\n", c->opcode);
@@ -182,6 +181,7 @@ void emulate_cycle(struct chip8 *c)
 			break;
 		case 0x7000: //7xNN: V[x] += NN
 			c->V[vx] += c->opcode & 0x00FF;
+			c->V[vx] &= 0xFF;
 			break;
 		case 0x8000:
 			switch(c->opcode & 0x000F)
@@ -190,13 +190,13 @@ void emulate_cycle(struct chip8 *c)
 					c->V[vx] = c->V[vy];
 					break;
 				case 0x0001: //8xy1: V[x] = V[x] OR V[y]
-					c->V[vx] = c->V[vx] | c->V[vy];
+					c->V[vx] |= c->V[vy];
 					break;
 				case 0x0002: //8xy2: V[x] = V[x] AND V[y]
-					c->V[vx] = c->V[vx] & c->V[vy];
+					c->V[vx] &= c->V[vy];
 					break;
 				case 0x0003: //8xy3: V[x] = V[x] XOR V[y]
-					c->V[vx] = c->V[vx] ^ c->V[vy];
+					c->V[vx] ^= c->V[vy];
 					break;
 				case 0x0004: //8xy4: V[x] += V[y]
 					if(c->V[vx] + c->V[vy] > 0xFF)
@@ -229,6 +229,7 @@ void emulate_cycle(struct chip8 *c)
 				case 0x000E: //8xyE: Multiply V[x] by 2
 					c->V[0xF] = c->V[vx] & 0x0001;
 					c->V[vx] = c->V[vx] << 1;
+					c->V[vx] &= 0xFF;
 					break;
 				default:
 					printf("Unknown opcode: [0x8000]: 0x%X\n", c->opcode);
@@ -243,7 +244,7 @@ void emulate_cycle(struct chip8 *c)
 			c->I = c->opcode & 0x0FFF;
 			break;
 		case 0xB000: //BNNN: Jump to location NNN + V[0]
-			c->pc = c->opcode & 0x0FFF + c->V[0];
+			c->pc = (c->opcode & 0x0FFF) + c->V[0];
 			break;
 		case 0xC000: //CxNN: V[x] = rand & NN
 			c->V[vx] = (rand() % 0xFF) & (c->opcode & 0x00FF);
@@ -260,7 +261,7 @@ void emulate_cycle(struct chip8 *c)
 						c->pc += 2;
 					break;
 				case 0x00A1: //ExA1: Skip next instruction if key with value of V[x] is not pressed
-					if(!c->keys[c->V[vx] & 0xF])
+					if(!(c->keys[c->V[vx] & 0xF]))
 						c->pc += 2;
 					break;
 				default:
