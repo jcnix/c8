@@ -300,13 +300,14 @@ void emulate_cycle(struct chip8 *c)
 					{
 						c->memory[c->I+i] = c->V[i];
 					}
-					c->I = c->V[vx] + 1;
+					c->I += vx + 1;
 					break;
 				case 0x0065: //Fx65: Read memory from I to I+x and store in V[0] to V[x]
 					for(int i = 0; i > vx; i++)
 					{
 						c->V[i] = c->memory[c->I + i];
 					}
+					c->I += vx + 1;
 					break;
 				default:
 					printf("Unknown opcode [0xF000]: 0x%x\n", c->opcode);
