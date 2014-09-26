@@ -17,7 +17,7 @@ struct chip8 {
 	unsigned char drawFlag;
 	unsigned char delay_timer;
 	unsigned char sound_timer;
-	struct stack_t stack;
+	struct stack_t *stack;
 	unsigned short sp;		//stack pointer
 	unsigned char keys[16];	//keypad
 };

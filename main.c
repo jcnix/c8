@@ -5,28 +5,26 @@
 #include <SDL2/sdl.h>
 #include "chip8.h"
 
-int i = 0;
+int opcount = 0;
 
-void stack_init(struct stack_t *s)
+void stack_push(struct stack_t **head, int i)
 {
-	s->next = NULL;
+	struct stack_t *curr = malloc(sizeof(struct stack_t));
+	curr->i = i;
+	curr->next = *head;
+	*head = curr;
+	printf("push %d\n", i);
 }
 
-void stack_push(struct stack_t *s, int i)
+int stack_pop(struct stack_t **head)
 {
-	struct stack_t curr;
-	curr.i = i;
-	curr.next = s;
-	s = &curr;
-}
-
-int stack_pop(struct stack_t *s)
-{
-	if(s == NULL)
+	if(*head == NULL)
 		return 0;
 		
-	int i = s->i;
-	s = s->next;
+	int i = (*head)->i;
+	struct stack_t *temp = (*head)->next;
+	free(*head);
+	*head = temp;
 	return i;
 }
 
@@ -135,7 +133,7 @@ void emulate_cycle(struct chip8 *c)
 {
 	//fetch 
 	c->opcode = c->memory[c->pc] << 8 | c->memory[c->pc+1];
-	printf("%d: opcode: 0x%04x\n", ++i, c->opcode);
+	printf("%d: opcode: 0x%04x\n", ++opcount, c->opcode);
 	
 	c->pc += 2;
 	int vx = c->opcode & 0x0F00 >> 8;
@@ -297,14 +295,14 @@ void emulate_cycle(struct chip8 *c)
 					c->memory[c->I+2] = c->V[vx] % 10;
 					break;
 				case 0x0055:
-					for(int i = 0; i >= vx; i++)
+					for(int i = 0; i > vx; i++)
 					{
 						c->memory[c->I+i] = c->V[i];
 					}
 					c->I = c->V[vx] + 1;
 					break;
 				case 0x0065:
-					for(int i = 0; i >= vx; i++)
+					for(int i = 0; i > vx; i++)
 					{
 						c->V[i] = c->memory[c->I + i];
 					}
@@ -331,6 +329,16 @@ void emulate_cycle(struct chip8 *c)
 	}
 }
 
+int print_stack(struct stack_t *head)
+{
+	struct stack_t *curr = head;
+	while(curr)
+	{
+		printf("%d ", curr->i);
+		curr = curr->next;
+	}
+	printf("\n");
+}
 
 int main(int argc, char** argv)
 {
@@ -349,7 +357,7 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-		window = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+		window = SDL_CreateWindow( "Chip8", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
 		if(!window)
 		{
 			printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
@@ -401,7 +409,7 @@ int main(int argc, char** argv)
 		    		r.y = y;
 		    		r.w = 10;
 		    		r.h = 10;
-		    		SDL_BlitSurface(pixel, NULL, screen, NULL);
+		    		SDL_BlitSurface(pixel, NULL, screen, &r);
 		    	}
 		    }
 		    SDL_UpdateWindowSurface(window);
