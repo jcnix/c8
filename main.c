@@ -286,6 +286,7 @@ void emulate_cycle(struct chip8 *c)
 					break;
 				case 0x001E: //Fx1E: I += V[x]
 					c->I += c->V[vx];
+					c->V[0xF] = c->I > 0xFFFF;
 					break;
 				case 0x0029: //Fx29: I = location of sprite for digit Vx
 					c->I = (5*(c->V[vx])) & 0xfff;
