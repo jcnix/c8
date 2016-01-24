@@ -535,6 +535,7 @@ int main(int argc, char** argv)
 		}
 	}
 
+	SDL_FreeSurface(s);
 	SDL_FreeSurface(pixel);
 	pixel = NULL;
 
