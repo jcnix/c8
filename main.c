@@ -13,7 +13,7 @@ void stack_push(struct stack_t **head, int i)
 	curr->i = i;
 	curr->next = *head;
 	*head = curr;
-	printf("push %x\n", i);
+	//printf("push %x\n", i);
 }
 
 int stack_pop(struct stack_t **head)
@@ -22,7 +22,7 @@ int stack_pop(struct stack_t **head)
 		return 0;
 		
 	int i = (*head)->i;
-	printf("pop %x\n", i);
+	//printf("pop %x\n", i);
 	struct stack_t *temp = (*head)->next;
 	free(*head);
 	*head = temp;
@@ -91,6 +91,7 @@ void initialize(struct chip8 *c)
 	c->sound_timer = 0;
 }
 
+//Await key press
 void _Fx0A(struct chip8 *c, int vx)
 {
 	char ch;
@@ -100,10 +101,10 @@ void _Fx0A(struct chip8 *c, int vx)
 			ch = 1;
 	}
 
-	if(ch > 0)
+	if(ch >= 0)
 		c->V[vx] = ch;
 	else
-		c->pc+=2;
+		c->pc -= 2;
 }
 
 void _DxyN(struct chip8 *c, int vx, int vy)
@@ -129,10 +130,12 @@ void _DxyN(struct chip8 *c, int vx, int vy)
 			int mask = 1 << (8 - pixel_offset);
 			int curr_pixel = (curr_row & mask) >> (8 - pixel_offset);
 			c->gfx[loc] ^= curr_pixel;
-			if(c->gfx[loc] == 0)
+			if(c->gfx[loc] == 0) {
 				c->V[0xf] = 1;
-			else
+			}
+			else {
 				c->V[0xf] = 0;
+			}
 		}
 		row += 1;
 	}
@@ -144,7 +147,7 @@ void emulate_cycle(struct chip8 *c)
 	//fetch 
 	c->opcode = c->memory[c->pc] << 8 | c->memory[c->pc+1];
 	//printf("%d: opcode: 0x%04x\n", ++opcount, c->opcode);
-	//if(++opcount >= 100) exit(1);
+	//if(++opcount >= 3000) exit(1);
 
 	c->pc += 2;
 	int vx = (c->opcode & 0x0F00) >> 8;
@@ -180,7 +183,7 @@ void emulate_cycle(struct chip8 *c)
 			c->pc = c->opcode & 0x0FFF;
 			break;
 		case 0x3000: //3NNN: skip instruction if V[x]= NN
-			printf("3XNN %X - %X - %X\n", c->opcode, vx, c->V[vx]);
+			printf("3XNN %X\n", c->opcode, vx, c->V[vx]);
 			if(c->V[vx] == (c->opcode & 0x00FF)) {
 				c->pc += 2;
 			}
@@ -204,7 +207,6 @@ void emulate_cycle(struct chip8 *c)
 			printf("7XNN %X\n", c->opcode);
 			c->V[vx] += (c->opcode & 0x00FF);
 			c->V[vx] &= 0xFF;
-			printf("Vx - %x\n", c->V[vx]);
 			break;
 		case 0x8000:
 			switch(c->opcode & 0x000F)
@@ -286,13 +288,15 @@ void emulate_cycle(struct chip8 *c)
 			{
 				case 0x009E: //Ex9E: Skip next instruction if key with value of V[x] is pressed
 					printf("EX9E %X\n", c->opcode);
-					if(c->keys[c->V[vx] & 0xF])
+					if(c->keys[c->V[vx] & 0xF]) {
 						c->pc += 2;
+					}
 					break;
 				case 0x00A1: //ExA1: Skip next instruction if key with value of V[x] is not pressed
 					printf("EXA1 %X\n", c->opcode);
-					if(!(c->keys[c->V[vx] & 0xF]))
+					if(!(c->keys[c->V[vx] & 0xF])) {
 						c->pc += 2;
+					}
 					break;
 				default:
 					printf("Unknown opcode [0xEnnn]: 0x%x\n", c->opcode);
@@ -300,6 +304,7 @@ void emulate_cycle(struct chip8 *c)
 			}
 			break;
 		case 0xF000:
+			printf("test fx0a : %x\n", c->opcode);
 			switch(c->opcode & 0x00FF)
 			{
 				case 0x0007: //Fx07: set V[x] to delay timer
@@ -360,8 +365,9 @@ void emulate_cycle(struct chip8 *c)
 	}
 
 	//update timers
-	if(c->delay_timer > 0)
+	if(c->delay_timer > 0) {
 		--c->delay_timer;
+	}
 
 	if(c->sound_timer > 0)
 	{
@@ -474,7 +480,8 @@ int main(int argc, char** argv)
 		if(e.type == SDL_QUIT) {
 			quit = 1;
 		} else if(e.type == SDL_KEYDOWN) {
-			int k = e.key.keysym.sym;
+			long k = e.key.keysym.sym;
+			printf("key pressed - %ld\n", k);
 			switch(k) {
 				case SDLK_1:
 					cpu.keys[0] = 1;
@@ -484,6 +491,46 @@ int main(int argc, char** argv)
 					break;
 				case SDLK_3:
 					cpu.keys[2] = 1;
+					break;
+				case SDLK_4:
+					cpu.keys[3] = 1;
+					break;
+				case SDLK_q:
+					cpu.keys[4] = 1;
+					break;
+				case SDLK_w:
+					cpu.keys[5] = 1;
+					break;
+				case SDLK_e:
+					cpu.keys[6] = 1;
+					break;
+				case SDLK_r:
+					cpu.keys[7] = 1;
+					break;
+				case SDLK_a:
+					cpu.keys[8] = 1;
+					break;
+				case SDLK_s:
+					cpu.keys[9] = 1;
+					break;	
+				case SDLK_d:
+					cpu.keys[10] = 1;
+					break;
+				case SDLK_f:
+					cpu.keys[11] = 1;
+					break;
+				case SDLK_z:
+					cpu.keys[12] = 1;
+					break;
+				case SDLK_x:
+					cpu.keys[13] = 1;
+					break;
+				case SDLK_c:
+					cpu.keys[14] = 1;
+					break;
+				case SDLK_v:
+					cpu.keys[15] = 1;
+					break;
 			}
 		}
 	}
