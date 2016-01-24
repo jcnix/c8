@@ -473,15 +473,14 @@ int main(int argc, char** argv)
 			cpu.drawFlag = 0;
 		}
 
-		reset_keys(&cpu);
 		//set keys
+		reset_keys(&cpu);
 		SDL_Event e;
 		SDL_PollEvent(&e);
 		if(e.type == SDL_QUIT) {
 			quit = 1;
 		} else if(e.type == SDL_KEYDOWN) {
 			long k = e.key.keysym.sym;
-			printf("key pressed - %ld\n", k);
 			switch(k) {
 				case SDLK_1:
 					cpu.keys[0] = 1;
@@ -539,7 +538,8 @@ int main(int argc, char** argv)
 	SDL_FreeSurface(pixel);
 	pixel = NULL;
 
-	SDL_DestroyWindow( window );
+	SDL_DestroyWindow(window);
+	SDL_DestroyWindow(screen);
 	SDL_Quit();
 
 	return 0;
