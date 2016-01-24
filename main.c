@@ -382,7 +382,7 @@ int print_stack(struct stack_t *head)
 	printf("\n");
 }
 
-int reset_keys(struct chip *c) {
+int reset_keys(struct chip8 *c) {
 	//setup input
 	for(int i = 0; i < 16; i++) {
 		c->keys[i] = 0;
@@ -438,7 +438,7 @@ int main(int argc, char** argv)
 	SDL_UpdateWindowSurface(window);
 	
 	//init keys
-	reset_keys(c);
+	reset_keys(&cpu);
 
 	int quit = 0;
 	while(!quit)
@@ -467,6 +467,7 @@ int main(int argc, char** argv)
 			cpu.drawFlag = 0;
 		}
 
+		reset_keys(&cpu);
 		//set keys
 		SDL_Event e;
 		SDL_PollEvent(&e);
@@ -474,8 +475,15 @@ int main(int argc, char** argv)
 			quit = 1;
 		} else if(e.type == SDL_KEYDOWN) {
 			int k = e.key.keysym.sym;
-			if(k == SDLK_1) {
-				cpu.keys[0] = 1;
+			switch(k) {
+				case SDLK_1:
+					cpu.keys[0] = 1;
+					break;
+				case SDLK_2:
+					cpu.keys[1] = 1;
+					break;
+				case SDLK_3:
+					cpu.keys[2] = 1;
 			}
 		}
 	}
