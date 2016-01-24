@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-//#include <SDL2/sdl.h>
+#include <SDL2/sdl.h>
 #include "chip8.h"
 
 int opcount = 0;
@@ -144,7 +144,7 @@ void emulate_cycle(struct chip8 *c)
 	//fetch 
 	c->opcode = c->memory[c->pc] << 8 | c->memory[c->pc+1];
 	//printf("%d: opcode: 0x%04x\n", ++opcount, c->opcode);
-	if(++opcount >= 100) exit(1);
+	//if(++opcount >= 100) exit(1);
 
 	c->pc += 2;
 	int vx = (c->opcode & 0x0F00) >> 8;
@@ -382,6 +382,13 @@ int print_stack(struct stack_t *head)
 	printf("\n");
 }
 
+int reset_keys(struct chip *c) {
+	//setup input
+	for(int i = 0; i < 16; i++) {
+		c->keys[i] = 0;
+	}
+}
+
 int main(int argc, char** argv)
 {
 	srand(time(NULL));
@@ -389,7 +396,7 @@ int main(int argc, char** argv)
 
 	initialize(&cpu);
 	load_game(&cpu, argv[1]);
-/*
+
 	//setup graphics
 	SDL_Window *window = NULL;
 	SDL_Surface *screen = NULL;
@@ -407,19 +414,19 @@ int main(int argc, char** argv)
 		else
 		{
 			//Get window surface
-						screen = SDL_GetWindowSurface(window);
+			screen = SDL_GetWindowSurface(window);
 
-						//Fill the surface white
-						SDL_FillRect( screen, NULL, SDL_MapRGB(screen->format, 0xFF, 0xFF, 0xFF ) );
-						
-						//Update the surface
-						SDL_UpdateWindowSurface(window);
+			//Fill the surface white
+			SDL_FillRect( screen, NULL, SDL_MapRGB(screen->format, 0xFF, 0xFF, 0xFF ) );
+			
+			//Update the surface
+			SDL_UpdateWindowSurface(window);
 		}
 	}
 
 	SDL_Surface *s;
 	s = SDL_CreateRGBSurface(0, 640, 320, 32, 0,0,0,0);
-	SDL_FillRect(s, NULL, SDL_MapRGB(s->format, 255, 0, 0));
+	SDL_FillRect(s, NULL, SDL_MapRGB(s->format, 0, 0, 0));
 	SDL_Surface *pixel = NULL;
 	pixel = SDL_LoadBMP("pixel.bmp");
 	if(!pixel)
@@ -429,48 +436,55 @@ int main(int argc, char** argv)
 	SDL_BlitSurface(s, NULL, screen, NULL);
 	SDL_BlitSurface(pixel, NULL, screen, NULL);
 	SDL_UpdateWindowSurface(window);
-*/
-	//setup input
 	
+	//init keys
+	reset_keys(c);
+
 	int quit = 0;
 	while(!quit)
 	{
+		usleep(1000);
 		emulate_cycle(&cpu);
 		if(cpu.drawFlag)
 		{
 			//draw graphics
-			//SDL_BlitSurface(s, NULL, screen, NULL);
+			SDL_BlitSurface(s, NULL, screen, NULL);
 			for(int i = 0; i < DISP_T; i++)
 			{
 				if(cpu.gfx[i])
 				{
 					int x = (i % 64) * 10;
 					int y = (i / 64) *10;
-					//SDL_Rect r;
-					//r.x = x;
-					//r.y = y;
-					//r.w = 10;
-					//r.h = 10;
-					//SDL_BlitSurface(pixel, NULL, screen, &r);
+					SDL_Rect r;
+					r.x = x;
+					r.y = y;
+					r.w = 10;
+					r.h = 10;
+					SDL_BlitSurface(pixel, NULL, screen, &r);
 				}
 			}
-			//SDL_UpdateWindowSurface(window);
+			SDL_UpdateWindowSurface(window);
 			cpu.drawFlag = 0;
 		}
 
 		//set keys
-		//SDL_Event e;
-		//SDL_PollEvent(&e);
-		//if(e.type == SDL_QUIT) {
-		//	quit = 1;
-		//}
+		SDL_Event e;
+		SDL_PollEvent(&e);
+		if(e.type == SDL_QUIT) {
+			quit = 1;
+		} else if(e.type == SDL_KEYDOWN) {
+			int k = e.key.keysym.sym;
+			if(k == SDLK_1) {
+				cpu.keys[0] = 1;
+			}
+		}
 	}
 
-	//SDL_FreeSurface(pixel);
-	//pixel = NULL;
+	SDL_FreeSurface(pixel);
+	pixel = NULL;
 
-	//SDL_DestroyWindow( window );
-	//SDL_Quit();
+	SDL_DestroyWindow( window );
+	SDL_Quit();
 
 	return 0;
 }
